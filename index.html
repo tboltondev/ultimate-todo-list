@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Todo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      background: #22162B;
+      color: #F8C630;
+      font-family: verdana;
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    input {
+      background: #451F55;
+      color: #F8C630;
+      border: solid 2px #724E91;
+      border-radius: 2rem;
+      padding: 0.25rem;
+    }
+
+    button {
+      background: #E54F6D;
+      color: #22162B;
+      border: solid 2px #724E91;
+      border-radius: 2rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 1rem;
+    }
+
+    .cursor-pointer {
+      cursor: pointer;
+    }
+
+    .strike {
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <h1>Todo</h1>
+    <ul id="todoList"></ul>
+    <form id="newTodoForm">
+      <input name="todoText" id="todoTextInput" type="text">
+      <button>+</button>
+    </form>
+  </div>
+  <script>
+    const _todos = [];
+
+    const toggleTodo = todoId => event => {
+      const todo = todos.find(todo => todo.id === todoId);
+      todo.done = !todo.done;
+      renderTodos(); // TODO: shouldn't be here
+    }
+
+    function renderTodos() {
+      todoList.innerHTML = ''; // TODO: only re-render changed items not all
+      _todos
+        .map(createTodoElement)
+        .forEach(element => {
+          todoList.appendChild(element);
+        });
+    }
+
+    function createTodoElement(todo) {
+      const todoEl = document.createElement("li");
+      todoEl.innerText = todo.text;
+      todoEl.classList.add("cursor-pointer");
+
+      if (todo.done) {
+        todoEl.classList.add("strike");
+      }
+
+      todoEl.addEventListener('click', toggleTodo(todo.id))
+
+      return todoEl;
+    }
+
+    const todos = new Proxy(_todos, {
+      get(target, prop, receiver) {
+        if (prop === "push") {
+          return function (...args) {
+            const result = Array.prototype.push.apply(target, args);
+            renderTodos();
+            return result;
+          };
+        }
+
+        return Reflect.get(target, prop, receiver);
+      },
+    });
+
+    newTodoForm.addEventListener('submit', event => {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+
+      const newTodo = {
+        id: crypto.randomUUID(),
+        text: formData.get("todoText"),
+        done: false,
+        created: new Date(),
+      };
+
+      todos.push(newTodo);
+      event.target.reset();
+    })
+  </script>
+</body>
+
+</html>
